@@ -20,7 +20,7 @@ reg prev_nCS;
 
 //reg transaction_ready;
 reg R_W;
-reg [7:0] max_address = 4;
+reg [7:0] max_address = 8'd4;
 reg [7:0] address;
 wire clean_SCLK = sync_SCLK[2];
 wire sclk_rising  =  clean_SCLK & ~prev_SCLK;
@@ -64,10 +64,10 @@ always @(posedge clk or negedge rst_n) begin
 			if (address <= max_address)begin
 			//transaction_ready <= 1;
 				case (address)
-					3'd0: reg_out_7_0    <= shift_reg[7:0];
-					3'd1: reg_out_15_8   <= shift_reg[7:0];
-					3'd2: reg_pwm_7_0    <= shift_reg[7:0];
-					3'd3: reg_pwm_15_8   <= shift_reg[7:0];
+					3'd0: reg_out_7_0 <= shift_reg[7:0];
+					3'd1: reg_out_15_8 <= shift_reg[7:0];
+					3'd2: reg_pwm_7_0 <= shift_reg[7:0];
+					3'd3: reg_pwm_15_8 <= shift_reg[7:0];
 					3'd4: pwm_duty_cycle <= shift_reg[7:0];
 				endcase
 			end
