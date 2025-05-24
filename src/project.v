@@ -52,6 +52,7 @@ assign uio_oe = 8'hFF;
 //	assign uio_out = 0;
 //	assign uio_oe  = 0;
 
+
 // List all unused inputs to prevent warnings
 wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
 endmodule
