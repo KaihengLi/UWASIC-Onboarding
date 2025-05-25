@@ -1,4 +1,4 @@
-module pwm_peripheral(
+module spi_peripheral(
 input wire SCLK,
 input wire rst_n,
 input wire COPI,

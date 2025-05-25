@@ -28,21 +28,21 @@ module tt_um_onboarding_HenryLi (
 		.COPI(ui_in[1]),
 		.nCS(ui_in[2]),
 		.rst_n(rst_n),
-		.en_reg_out_7_0(en_reg_out_7_0),
-		.en_reg_out_15_8(en_reg_out_15_8),
-		.en_reg_pwm_7_0(en_reg_pwm_7_0),
-		.en_reg_pwm_15_8(en_reg_pwm_15_8),
+		.reg_out_7_0(en_reg_out_7_0),
+		.reg_out_15_8(en_reg_out_15_8),
+		.reg_pwm_7_0(en_reg_pwm_7_0),
+		.reg_pwm_15_8(en_reg_pwm_15_8),
 		.pwm_duty_cycle(pwm_duty_cycle)
 	);
 
 	pwm_peripheral pwm_peripheral_inst (
 		.clk(clk),
 		.rst_n(rst_n),
-		.reg_out_7_0(en_reg_out_7_0),
-		.reg_out_15_8(en_reg_out_15_8),
-		.reg_pwm_7_0(en_reg_pwm_7_0),
-		.reg_pwm_15_8(en_reg_pwm_15_8), 
-		.pwm_duty_cycle(pwm_duty_cycle)
+		.en_reg_out_7_0(en_reg_out_7_0),
+		.en_reg_out_15_8(en_reg_out_15_8),
+		.en_reg_pwm_7_0(en_reg_pwm_7_0),
+		.en_reg_pwm_15_8(en_reg_pwm_15_8),
+		.pwm_duty_cycle(pwm_duty_cycle),
 		.out({uio_out, uo_out})
 	);
 
