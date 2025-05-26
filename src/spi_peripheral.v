@@ -59,7 +59,7 @@ always @(posedge clk or negedge rst_n) begin
 				end
 				bit_counter <= bit_counter + 1;
 			end 
-		end else if(cs_rising && R_W) begin
+		end else if(cs_rising && ~R_W) begin
 			address <= shift_reg[14:8];
 			if (address <= max_address)begin
 			//transaction_ready <= 1;
