@@ -49,8 +49,8 @@ module tt_um_onboarding_HenryLi (
 	);
 
 	//	assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-	assign uo_out  = en_reg_out_7_0;
-	assign uio_out = en_reg_out_15_8;
+	//assign uo_out  = en_reg_out_7_0;
+	//assign uio_out = en_reg_out_15_8;
 
 
 	// List all unused inputs to prevent warnings
