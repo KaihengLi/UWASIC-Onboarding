@@ -52,17 +52,15 @@ always @(posedge clk or negedge rst_n) begin
 			if (sclk_rising) begin
 				if (bit_counter == 0) begin
    					R_W <= sync_COPI[2];
-				end else begin 
-					if (R_W) begin 
-						shift_reg <= {shift_reg[13:0], sync_COPI[2]};
-					end
+				end else if (~R_W) begin 
+					shift_reg <= {shift_reg[13:0], sync_COPI[2]};
 				end
 				bit_counter <= bit_counter + 1;
 			end 
 		end else if(cs_rising && ~R_W) begin
 			address <= shift_reg[14:8];
 			if (address <= max_address)begin
-			//transaction_ready <= 1;
+				//transaction_ready <= 1;
 				case (address)
 					3'd0: reg_out_7_0 <= shift_reg[7:0];
 					3'd1: reg_out_15_8 <= shift_reg[7:0];
