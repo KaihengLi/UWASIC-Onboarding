@@ -1,22 +1,21 @@
 # Tiny Tapeout project information
+
 project:
   title:        "Asic Onboarding - Henry Li"
   author:       "Henry Li"
   discord:      "Ming_dynasty"
   description:  "SPI-controlled PWM peripheral for Tiny Tapeout"
-  language:     "Verilog"   # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0           # Clock frequency in Hz (or 0 if not applicable)
+  language:     "Verilog"
+  clock_hz:     0
 
-tiles:        "1x1"       # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
-top_module:   tt_um_onboarding_HenryLi
-source_files:
-  - spi_peripheral.v
-  - pwm_peripheral.v
-  - project.v
+  tiles:        "1x1"
+  top_module:   tt_um_onboarding_HenryLi
+  source_files:
+    - spi_peripheral.v
+    - pwm_peripheral.v
+    - project.v
 
-# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
-  # Inputs
   ui[0]: "SCLK"
   ui[1]: "COPI"
   ui[2]: "nCS"
@@ -26,7 +25,6 @@ pinout:
   ui[6]: ""
   ui[7]: ""
 
-  # Outputs
   uo[0]: "OUT_0"
   uo[1]: "OUT_1"
   uo[2]: "OUT_2"
@@ -36,7 +34,6 @@ pinout:
   uo[6]: "OUT_6"
   uo[7]: "OUT_7"
 
-  # Bidirectional pins
   uio[0]: "OUT_8"
   uio[1]: "OUT_9"
   uio[2]: "OUT_A"
