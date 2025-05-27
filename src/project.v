@@ -14,6 +14,7 @@ module tt_um_onboarding_HenryLi (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
+  assign uio_oe = 8'hFF;
 
   wire [7:0] en_reg_out_7_0;
   wire [7:0] en_reg_out_15_8;
@@ -21,33 +22,32 @@ module tt_um_onboarding_HenryLi (
   wire [7:0] en_reg_pwm_15_8;
   wire [7:0] pwm_duty_cycle;
 
+  
+
   spi_peripheral spi_peripheral_inst (
-    .SCLK           (ui_in[0]),
-    .rst_n          (rst_n),
-    .COPI           (ui_in[1]),
-    .nCS            (ui_in[2]),
-    .clk            (clk),
-    .reg_out_7_0    (en_reg_out_7_0),
-    .reg_out_15_8   (en_reg_out_15_8),
-    .reg_pwm_7_0    (en_reg_pwm_7_0),
-    .reg_pwm_15_8   (en_reg_pwm_15_8),
-    .pwm_duty_cycle (pwm_duty_cycle)
+	.clk(clk),
+    .rst_n(rst_n),
+	.SCLK(ui_in[0]),
+    .COPI(ui_in[1]),
+    .nCS(ui_in[2]),
+    .en_reg_out_7_0(en_reg_out_7_0),
+    .en_reg_out_15_8(en_reg_out_15_8),
+    .en_reg_pwm_7_0(en_reg_pwm_7_0),
+    .en_reg_pwm_15_8(en_reg_pwm_15_8),
+    .pwm_duty_cycle(pwm_duty_cycle)
+
   );
 
   pwm_peripheral pwm_peripheral_inst (
-    .clk            (clk),
-    .rst_n          (rst_n),
-    .en_reg_out_7_0 (en_reg_out_7_0),
-    .en_reg_out_15_8(en_reg_out_15_8),
-    .en_reg_pwm_7_0 (en_reg_pwm_7_0),
-    .en_reg_pwm_15_8(en_reg_pwm_15_8),
-    .pwm_duty_cycle (pwm_duty_cycle),
-    .out            ({uo_out, uio_out})
+	.clk(clk),
+	.rst_n(rst_n),
+	.en_reg_out_7_0(en_reg_out_7_0),
+	.en_reg_out_15_8(en_reg_out_15_8),
+	.en_reg_pwm_7_0(en_reg_pwm_7_0),
+	.en_reg_pwm_15_8(en_reg_pwm_15_8),
+	.pwm_duty_cycle(pwm_duty_cycle),
+	.out({uio_out, uo_out})
   );
-
-  // Drive all IOs as outputs
-  assign uio_oe = 8'hFF;
-  // avoid warnings
   wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
 
 endmodule
