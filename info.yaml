@@ -6,12 +6,13 @@ project:
   description:  "SPI-controlled PWM peripheral for Tiny Tapeout"
   language:     "Verilog"   # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     0           # Clock frequency in Hz (or 0 if not applicable)
-  tiles:        "1x1"       # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
-  top_module:   tt_um_onboarding_HenryLi
-  source_files:
-    - spi_peripheral.v
-    - pwm_peripheral.v
-    - project.v
+
+tiles:        "1x1"       # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
+top_module:   tt_um_onboarding_HenryLi
+source_files:
+  - spi_peripheral.v
+  - pwm_peripheral.v
+  - project.v
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
