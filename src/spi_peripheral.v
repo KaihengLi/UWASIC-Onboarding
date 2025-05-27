@@ -56,7 +56,7 @@ always @(posedge clk or negedge rst_n) begin
 			bit_counter <= 5'd0;
 			shift_reg   <= 15'd0;
 			R_W         <= 1'b0;
-        end else if (sync_nCS[2]==1'b0 && bit_counter < 5'd16) begin
+        end else if (sync_nCS[1]==1'b0 && bit_counter < 5'd16) begin
 			if (sclk_rising) begin
 				if (bit_counter == 0) begin
 					R_W <= sync_COPI[2];
