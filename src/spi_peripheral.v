@@ -12,20 +12,20 @@ module spi_peripheral(
     output reg [7:0] pwm_duty_cycle
 );
 reg [2:0] sync_COPI, sync_SCLK, sync_nCS;
-reg prev_SCLK, prev_nCS;
+//reg prev_SCLK, prev_nCS;
 
 reg [4:0] bit_counter;
 reg [14:0] shift_reg;
 //reg transaction_ready;
 reg R_W;
 localparam max_address = 8'd4;
-reg [7:0] address;
+reg [6:0] address;
 
 wire filter_SCLK = sync_SCLK[2];
-wire sclk_rising  =  filter_SCLK & ~prev_SCLK;
+wire sclk_rising = sync_SCLK[2] & ~sync_SCLK[1];
 //wire sclk_falling = ~filter_SCLK &  prev_SCLK;
-wire cs_rising  =  sync_nCS[2] & ~prev_nCS;
-wire cs_falling = ~sync_nCS[2] &  prev_nCS;
+wire cs_rising  = sync_nCS[2] & ~sync_nCS[1];
+wire cs_falling = ~sync_nCS[2] & sync_nCS[1];
 
 always @(posedge clk or negedge rst_n) begin
 	if (~rst_n) begin
@@ -47,6 +47,7 @@ always @(posedge clk or negedge rst_n) begin
 		en_reg_pwm_15_8   <= 8'd0;
 		pwm_duty_cycle <= 8'd0;
 	end else begin
+
 		prev_SCLK <= sync_SCLK[2];
 		prev_nCS <= sync_nCS[2];
 		sync_SCLK <= { sync_SCLK[1:0],SCLK};
@@ -56,7 +57,7 @@ always @(posedge clk or negedge rst_n) begin
 			bit_counter <= 5'd0;
 			shift_reg   <= 15'd0;
 			R_W         <= 1'b0;
-        end else if (sync_nCS[1]==1'b0 && bit_counter < 5'd16) begin
+        end else if (sync_nCS[2]==1'b0 && bit_counter < 5'd16) begin
 			if (sclk_rising) begin
 				if (bit_counter == 0) begin
 					R_W <= sync_COPI[2];
