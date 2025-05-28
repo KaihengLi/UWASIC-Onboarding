@@ -63,7 +63,7 @@ always @(posedge clk or negedge rst_n) begin
 					R_W <= sync_COPI[2];
 				end else begin
 					if (R_W) begin
-						shift_reg <= { shift_reg[14:0], sync_COPI[2] };
+						shift_reg <= { shift_reg[13:0], sync_COPI[2] };
 					end
 				end
 				bit_counter <= bit_counter + 1;
