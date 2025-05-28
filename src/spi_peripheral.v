@@ -32,9 +32,9 @@ always @(posedge clk or negedge rst_n) begin
 		sync_COPI <= 3'b000;
 		sync_SCLK <= 3'b000;
 		sync_nCS  <= 3'b111;
-		prev_SCLK <= 1'b0;
+		//prev_SCLK <= 1'b0;
 		address <= 8'd0;
-		prev_nCS <= 1'b1;
+		//prev_nCS <= 1'b1;
 
 		bit_counter <= 5'd0;
 		shift_reg <= 15'd0;
@@ -48,8 +48,8 @@ always @(posedge clk or negedge rst_n) begin
 		pwm_duty_cycle <= 8'd0;
 	end else begin
 
-		prev_SCLK <= sync_SCLK[2];
-		prev_nCS <= sync_nCS[2];
+		//prev_SCLK <= sync_SCLK[2];
+		//prev_nCS <= sync_nCS[2];
 		sync_SCLK <= { sync_SCLK[1:0],SCLK};
 		sync_COPI <= { sync_COPI[1:0],COPI};
 		sync_nCS  <= { sync_nCS[1:0],nCS};
