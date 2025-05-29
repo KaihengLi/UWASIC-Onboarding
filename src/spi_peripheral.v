@@ -61,12 +61,10 @@ always @(posedge clk or negedge rst_n) begin
 			if (sclk_rising) begin
 				if (bit_counter == 0) begin
 					R_W <= sync_COPI[2];
-				end else if(bit_counter < 8) begin
+				end else if((bit_counter < 8) && R_W) begin
 					address <= { address[5:0], sync_COPI[2] };
-				end else begin
-					if (R_W) begin
-						data <= { data[6:0], sync_COPI[2] };
-					end
+				end else if (R_W) begin
+					data <= { data[6:0], sync_COPI[2] };
 				end
 				bit_counter <= bit_counter + 1;
 			end
