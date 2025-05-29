@@ -21,7 +21,6 @@ module tt_um_onboarding_HenryLi (
   wire [7:0] en_reg_pwm_7_0;
   wire [7:0] en_reg_pwm_15_8;
   wire [7:0] pwm_duty_cycle;
-
   
 
   spi_peripheral spi_peripheral_inst (

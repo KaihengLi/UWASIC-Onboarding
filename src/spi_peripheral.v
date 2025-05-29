@@ -22,10 +22,10 @@ localparam max_address = 8'd4;
 reg [6:0] address;
 
 wire filter_SCLK = sync_SCLK[2];
-wire sclk_rising = sync_SCLK[2] & ~sync_SCLK[1];
+wire sclk_rising = sync_SCLK[1] & ~sync_SCLK[2];
 //wire sclk_falling = ~filter_SCLK &  prev_SCLK;
-wire cs_rising  = sync_nCS[2] & ~sync_nCS[1];
-wire cs_falling = ~sync_nCS[2] & sync_nCS[1];
+wire cs_rising  = sync_nCS[1] & ~sync_nCS[2];
+wire cs_falling = ~sync_nCS[1] & sync_nCS[2];
 
 always @(posedge clk or negedge rst_n) begin
 	if (~rst_n) begin
@@ -81,9 +81,6 @@ always @(posedge clk or negedge rst_n) begin
 					default:;
 				endcase
 			end
-			bit_counter <= 5'd0;
-            shift_reg   <= 15'd0;
-			R_W <= 1'b0;
 		end
 	end
 
