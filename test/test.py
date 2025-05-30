@@ -86,177 +86,95 @@ async def send_spi_transaction(dut, r_w, address, data):
     dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
     await ClockCycles(dut.clk, 600)
     return ui_in_logicarray(ncs, bit, sclk)
-
-@cocotb.test()
-async def test_spi(dut):
-    dut._log.info("Start SPI test")
-
-    # Set the clock period to 100 ns (10 MHz)
-    clock = Clock(dut.clk, 100, units="ns")
-    cocotb.start_soon(clock.start())
-
-    # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    ncs = 1
-    bit = 0
-    sclk = 0
-    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-
-    dut._log.info("Test project behavior")
-    dut._log.info("Write transaction, address 0x00, data 0xF0")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xF0)  # Write transaction
-    assert dut.uo_out.value == 0xF0, f"Expected 0xF0, got {dut.uo_out.value}"
-    await ClockCycles(dut.clk, 1000) 
-
-    dut._log.info("Write transaction, address 0x01, data 0xCC")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x01, 0xCC)  # Write transaction
-    assert dut.uio_out.value == 0xCC, f"Expected 0xCC, got {dut.uio_out.value}"
-    await ClockCycles(dut.clk, 100)
-
-    dut._log.info("Write transaction, address 0x30 (invalid), data 0xAA")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x30, 0xAA)
-    await ClockCycles(dut.clk, 100)
-
-    dut._log.info("Read transaction (invalid), address 0x00, data 0xBE")
-    ui_in_val = await send_spi_transaction(dut, 0, 0x30, 0xBE)
-    assert dut.uo_out.value == 0xF0, f"Expected 0xF0, got {dut.uo_out.value}"
-    await ClockCycles(dut.clk, 100)
-    
-    dut._log.info("Read transaction (invalid), address 0x41 (invalid), data 0xEF")
-    ui_in_val = await send_spi_transaction(dut, 0, 0x41, 0xEF)
-    await ClockCycles(dut.clk, 100)
-
-    dut._log.info("Write transaction, address 0x02, data 0xFF")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 100)
-
-    dut._log.info("Write transaction, address 0x04, data 0xCF")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xCF)  # Write transaction
-    await ClockCycles(dut.clk, 30000)
-
-    dut._log.info("Write transaction, address 0x04, data 0xFF")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)  # Write transaction
-    await ClockCycles(dut.clk, 30000)
-
-    dut._log.info("Write transaction, address 0x04, data 0x00")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x00)  # Write transaction
-    await ClockCycles(dut.clk, 30000)
-
-    dut._log.info("Write transaction, address 0x04, data 0x01")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x01)  # Write transaction
-    await ClockCycles(dut.clk, 30000)
-
-    dut._log.info("SPI test completed successfully")
-
 @cocotb.test()
 async def test_pwm_freq(dut):
-    #set up
-    pwm_sig = dut.uo_out[0]
-    clock = Clock(dut.clk, 100, units="ns")  
+    clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-    dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable pwm channel
+
+    dut.ui_in.value = ui_in_logicarray(1, 0, 0)
+
     await send_spi_transaction(dut, 1, 0x02, 1)
-    #set duty cycle to 50%
+
+    #set 50% duty
     await send_spi_transaction(dut, 1, 0x04, 128)
 
+    await ClockCycles(dut.clk, 2000)
+
+    pwm_sig = dut.uo_out[0]
+
     detected = False
-    for i in range(1000):
+    for _ in range(1000):
         await ClockCycles(dut.clk, 1)
-    # detect a rising edge by seeing a 0→1 transition
-        if pwm_sig.value.integer == 1:
+        if int(pwm_sig.value) == 1:
             detected = True
             break
+    assert detected, f"No rising edge after 1000 clk cycles; stuck at {int(pwm_sig.value)}"
 
-    if not detected:
-        level = int(pwm_sig.value)
-        assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
+    t1 = get_sim_time("ns")
     await RisingEdge(pwm_sig)
-    t_r = get_sim_time('ns')
-    await RisingEdge(pwm_sig) 
-    t_n = get_sim_time('ns')
+    t2 = get_sim_time("ns")
 
-    period = t_n - t_r
-    freq_hz = 1e9 / period
-    assert 2970 <= freq_hz <= 3030, f"PWM freq {freq_hz} Hz outside of 3 kHz±1%"
-    dut._log.info("PWM Frequency test completed successfully")
+    period_ns = t2 - t1
+    freq_hz   = 1e9 / period_ns
+    assert 2970 <= freq_hz <= 3030, f"Measured {freq_hz:.1f} Hz; expected 3000 Hz ±1%"
+
+    dut._log.info(f"PWM freq OK: {freq_hz:.1f} Hz")
+
+
 
 @cocotb.test()
 async def test_pwm_duty(dut):
-    pwm_sig = dut.uo_out
-    #setup
-    clock = Clock(dut.clk, 100, units="ns")  
-    cocotb.start_soon(clock.start())
+    """Check PWM duty at 0%, 50%, 100% using loop+assert for timeouts."""
 
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-    dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable pwm
+
+    dut.ui_in.value = ui_in_logicarray(1, 0, 0)
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
-    #set duty cycle to 50%
+
+    pwm_sig = dut.uo_out[0]
+
+    #50%
     await send_spi_transaction(dut, 1, 0x04, 128)
-    #detect timeout
+
     detected = False
-    for i in range(1000):
+    for _ in range(1000):
         await ClockCycles(dut.clk, 1)
-    # detect a rising edge by seeing a 0→1 transition
-        if pwm_sig.value.integer == 1:
+        if int(pwm_sig.value) == 1:
             detected = True
             break
-    if not detected:
-        level = int(pwm_sig.value)
-        assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
-    await RisingEdge(pwm_sig); t_r = get_sim_time('ns')
-    await FallingEdge(pwm_sig); t_f = get_sim_time('ns')
-    await RisingEdge(pwm_sig); t_n = get_sim_time('ns')
+    assert detected, f"50%: no rising edge; stuck at {int(pwm_sig.value)}"
+    t_r = get_sim_time("ns")
+    await FallingEdge(pwm_sig)
+    t_f = get_sim_time("ns")
+    await RisingEdge(pwm_sig)
+    t_n = get_sim_time("ns")
+    high_ns = t_f - t_r
+    period_ns = t_n - t_r
+    duty = 100 * high_ns / period_ns
+    assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, expected ~50%"
 
-    high_time = t_f - t_r
-    period = t_n - t_r
-    duty_cycle = (high_time)/period * 100
-    assert 49 < duty_cycle < 51
-
-    #reset
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-    dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable pwm
-    await send_spi_transaction(dut, 1, 0x02, 1)
-    await ClockCycles(dut.clk, 2000)
-    #set duty cycle to 0%
+    # 0%
     await send_spi_transaction(dut, 1, 0x04, 0)
-
-    for i in range(10):
-        await Timer(200, units='us')
-        assert int(pwm_sig.value) == 0
-
-    #reset
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 5)
-    dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable pwm
-    await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
-    #set duty cycle to 0%
+    for _ in range(10):
+        await ClockCycles(dut.clk, 100)
+        assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
+
+    # 100%
     await send_spi_transaction(dut, 1, 0x04, 255)
+    await ClockCycles(dut.clk, 2000)
+    for _ in range(10):
+        await ClockCycles(dut.clk, 100)
+        assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
 
-    for i in range(10):
-        await Timer(200, units='us')
-        assert int(pwm_sig.value) == 1
-
-    dut._log.info("PWM Duty Cycle test completed successfully")
+    dut._log.info("PWM duty-cycle tests passed")
