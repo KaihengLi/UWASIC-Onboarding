@@ -164,9 +164,7 @@ async def test_pwm_freq(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
     dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable spi
-    await send_spi_transaction(dut, 1, 0x00, 1)
-    #turn on same pwm channel
+    #enable pwm channel
     await send_spi_transaction(dut, 1, 0x02, 1)
     #set duty cycle to 50%
     detected = False
@@ -179,7 +177,7 @@ async def test_pwm_freq(dut):
 
     if not detected:
         level = int(pwm_sig.value)
-        raise f"No rising edge after {1000} clk cycles; stuck at {level}"
+        assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
 
     await send_spi_transaction(dut, 1, 0x04, 128)
     await RisingEdge(pwm_sig)
@@ -204,9 +202,7 @@ async def test_pwm_duty(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
     dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable spi
-    await send_spi_transaction(dut, 1, 0x00, 1)
-    #turn on same pwm channel
+    #enable pwm
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
     #set duty cycle to 50%
@@ -238,9 +234,7 @@ async def test_pwm_duty(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
     dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable spi
-    await send_spi_transaction(dut, 1, 0x00, 1)
-    #turn on same pwm channel
+    #enable pwm
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
     #set duty cycle to 0%
@@ -256,9 +250,7 @@ async def test_pwm_duty(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
     dut.ui_in.value = ui_in_logicarray(ncs=1, bit=0, sclk=0)
-    #enable spi
-    await send_spi_transaction(dut, 1, 0x00, 1)
-    #turn on same pwm channel
+    #enable pwm
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
     #set duty cycle to 0%
