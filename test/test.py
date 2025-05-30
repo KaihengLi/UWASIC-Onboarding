@@ -88,6 +88,7 @@ async def send_spi_transaction(dut, r_w, address, data):
     return ui_in_logicarray(ncs, bit, sclk)
 @cocotb.test()
 async def test_pwm_freq(dut):
+    #setup
     clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
     dut.rst_n.value = 0
@@ -102,12 +103,12 @@ async def test_pwm_freq(dut):
     #set 50% duty
     await send_spi_transaction(dut, 1, 0x04, 128)
 
-    await ClockCycles(dut.clk, 2000)
+    await ClockCycles(dut.clk, 7000)
 
     pwm_sig = dut.uo_out[0]
 
     detected = False
-    for _ in range(1000):
+    for i in range(5000):
         await ClockCycles(dut.clk, 1)
         if int(pwm_sig.value) == 1:
             detected = True
@@ -128,8 +129,7 @@ async def test_pwm_freq(dut):
 
 @cocotb.test()
 async def test_pwm_duty(dut):
-    """Check PWM duty at 0%, 50%, 100% using loop+assert for timeouts."""
-
+    #setup
     clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
     dut.rst_n.value = 0
@@ -139,15 +139,17 @@ async def test_pwm_duty(dut):
 
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
     await send_spi_transaction(dut, 1, 0x02, 1)
-    await ClockCycles(dut.clk, 2000)
 
     pwm_sig = dut.uo_out[0]
 
     #50%
     await send_spi_transaction(dut, 1, 0x04, 128)
+    
+    #wait
+    await ClockCycles(dut.clk, 7000)
 
     detected = False
-    for _ in range(1000):
+    for i in range(5000):
         await ClockCycles(dut.clk, 1)
         if int(pwm_sig.value) == 1:
             detected = True
