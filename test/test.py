@@ -167,6 +167,8 @@ async def test_pwm_freq(dut):
     #enable pwm channel
     await send_spi_transaction(dut, 1, 0x02, 1)
     #set duty cycle to 50%
+    await send_spi_transaction(dut, 1, 0x04, 128)
+
     detected = False
     for i in range(1000):
         await ClockCycles(dut.clk, 1)
@@ -178,8 +180,6 @@ async def test_pwm_freq(dut):
     if not detected:
         level = int(pwm_sig.value)
         assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
-
-    await send_spi_transaction(dut, 1, 0x04, 128)
     await RisingEdge(pwm_sig)
     t_r = get_sim_time('ns')
     await RisingEdge(pwm_sig) 
@@ -206,6 +206,8 @@ async def test_pwm_duty(dut):
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
     #set duty cycle to 50%
+    await send_spi_transaction(dut, 1, 0x04, 128)
+    #detect timeout
     detected = False
     for i in range(1000):
         await ClockCycles(dut.clk, 1)
@@ -216,9 +218,6 @@ async def test_pwm_duty(dut):
     if not detected:
         level = int(pwm_sig.value)
         assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
-    
-    await send_spi_transaction(dut, 1, 0x04, 128)
-
     await RisingEdge(pwm_sig); t_r = get_sim_time('ns')
     await FallingEdge(pwm_sig); t_f = get_sim_time('ns')
     await RisingEdge(pwm_sig); t_n = get_sim_time('ns')
