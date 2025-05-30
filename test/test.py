@@ -96,6 +96,8 @@ async def test_pwm_freq(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
 
+    dut.ena.value = 1
+
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
 
     await send_spi_transaction(dut, 1, 0x02, 1)
@@ -113,7 +115,7 @@ async def test_pwm_freq(dut):
         if int(pwm_sig.value) == 1:
             detected = True
             break
-    assert detected, f"No rising edge after 1000 clk cycles; stuck at {int(pwm_sig.value)}"
+    assert detected, f"No rising edge after 5000 clk cycles; stuck at {int(pwm_sig.value)}"
 
     t1 = get_sim_time("ns")
     await RisingEdge(pwm_sig)
@@ -136,7 +138,7 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
-
+    dut.ena.value = 1
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
     await send_spi_transaction(dut, 1, 0x02, 1)
 
@@ -163,20 +165,20 @@ async def test_pwm_duty(dut):
     high_ns = t_f - t_r
     period_ns = t_n - t_r
     duty = 100 * high_ns / period_ns
-    assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, expected ~50%"
+    assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, 50 +- 1%"
 
     # 0%
     await send_spi_transaction(dut, 1, 0x04, 0)
     await ClockCycles(dut.clk, 2000)
     for _ in range(10):
         await ClockCycles(dut.clk, 100)
-        assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
+    assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
 
     # 100%
     await send_spi_transaction(dut, 1, 0x04, 255)
     await ClockCycles(dut.clk, 2000)
     for _ in range(10):
         await ClockCycles(dut.clk, 100)
-        assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
+    assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
 
     dut._log.info("PWM duty-cycle tests passed")
