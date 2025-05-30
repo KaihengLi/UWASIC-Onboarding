@@ -9,7 +9,8 @@ from cocotb.triggers import ClockCycles
 from cocotb.triggers import Timer
 from cocotb.types import Logic
 from cocotb.types import LogicArray
-from cocotb.utils     import get_sim_time
+from cocotb.utils import get_sim_time
+
 
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
@@ -168,6 +169,18 @@ async def test_pwm_freq(dut):
     #turn on same pwm channel
     await send_spi_transaction(dut, 1, 0x02, 1)
     #set duty cycle to 50%
+    detected = False
+    for i in range(1000):
+        await ClockCycles(dut.clk, 1)
+    # detect a rising edge by seeing a 0→1 transition
+        if pwm_sig.value.integer == 1:
+            detected = True
+            break
+
+    if not detected:
+        level = int(pwm_sig.value)
+        raise f"No rising edge after {1000} clk cycles; stuck at {level}"
+
     await send_spi_transaction(dut, 1, 0x04, 128)
     await RisingEdge(pwm_sig)
     t_r = get_sim_time('ns')
@@ -176,7 +189,7 @@ async def test_pwm_freq(dut):
 
     period = t_n - t_r
     freq_hz = 1e9 / period
-    assert 2970 <= freq_hz <= 3030, f"PWM freq {freq_hz:.1f} Hz outside of 3 kHz±1%"
+    assert 2970 <= freq_hz <= 3030, f"PWM freq {freq_hz} Hz outside of 3 kHz±1%"
     dut._log.info("PWM Frequency test completed successfully")
 
 @cocotb.test()
@@ -197,6 +210,17 @@ async def test_pwm_duty(dut):
     await send_spi_transaction(dut, 1, 0x02, 1)
     await ClockCycles(dut.clk, 2000)
     #set duty cycle to 50%
+    detected = False
+    for i in range(1000):
+        await ClockCycles(dut.clk, 1)
+    # detect a rising edge by seeing a 0→1 transition
+        if pwm_sig.value.integer == 1:
+            detected = True
+            break
+    if not detected:
+        level = int(pwm_sig.value)
+        assert detected == True, f"No rising edge after {1000} clk cycles; stuck at {level}"
+    
     await send_spi_transaction(dut, 1, 0x04, 128)
 
     await RisingEdge(pwm_sig); t_r = get_sim_time('ns')
