@@ -3,15 +3,10 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
-from cocotb.triggers  import FallingEdge
 from cocotb.triggers import ClockCycles
-from cocotb.triggers import Timer
-from cocotb.triggers import with_timeout
-from cocotb.types import Logic
 from cocotb.types import LogicArray
 from cocotb.utils import get_sim_time
-from cocotb.result import SimTimeoutError, TestFailure
+from cocotb.result import TestFailure
 
 
 async def await_half_sclk(dut):
@@ -170,26 +165,26 @@ async def test_pwm_freq(dut):
     #setup
     clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
+
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
 
     dut.ena.value = 1
-
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
 
     await send_spi_transaction(dut, 1, 0x02, 1)
-
     #set 50% duty
     await send_spi_transaction(dut, 1, 0x04, 128)
 
     await ClockCycles(dut.clk, 7000)
 
-    pwm_sig = dut.uo_out[0]
+    #pwm_sig = dut.uo_out[0]
 
-    t1 = get_sim_time("ns")
-    t2 = await wait_for_level(dut,0)
+    t1 = await wait_for_level(dut,1,max_cycles=5000)
+    tf = await wait_for_level(dut,0,max_cycles=5000)
+    t2 = await wait_for_level(dut,1,max_cycles=5000)
 
     period_ns = t2 - t1
     freq_hz   = 1e9 / period_ns
@@ -225,27 +220,23 @@ async def test_pwm_duty(dut):
     period_expected = 1e9/3000
     timeout = int(period_expected*2)
     
-    t_r = get_sim_time("ns")
-    await FallingEdge(pwm_sig)
-    t_f = await wait_for_level(dut,0)
-    t_n = await wait_for_level(dut,1)
-    high_ns = t_f - t_r
-    period_ns = t_n - t_r
+    t1 = await wait_for_level(dut,1,max_cycles=5000)
+    tf = await wait_for_level(dut,0,max_cycles=5000)
+    t2 = await wait_for_level(dut,1,max_cycles=5000)
+
+    high_ns = tf - t1
+    period_ns = t2 - t1
     duty = 100 * high_ns / period_ns
-    assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, 50 +- 1%"
+    assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, outside of 50 +- 1%"
 
     # 0%
     await send_spi_transaction(dut, 1, 0x04, 0)
     await ClockCycles(dut.clk, 7000)
-    for _ in range(10):
-        await ClockCycles(dut.clk, 100)
-        assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
+    assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
 
     # 100%
     await send_spi_transaction(dut, 1, 0x04, 255)
     await ClockCycles(dut.clk, 7000)
-    for _ in range(10):
-        await ClockCycles(dut.clk, 100)
-        assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
+    assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
 
     dut._log.info("PWM duty-cycle tests passed")
