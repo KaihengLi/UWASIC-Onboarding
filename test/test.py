@@ -174,6 +174,7 @@ async def test_pwm_freq(dut):
     dut.ena.value = 1
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
 
+    await send_spi_transaction(dut, 1, 0x00, 0x01)
     await send_spi_transaction(dut, 1, 0x02, 1)
     #set 50% duty
     await send_spi_transaction(dut, 1, 0x04, 128)
@@ -206,6 +207,8 @@ async def test_pwm_duty(dut):
     dut.ena.value = 1
 
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
+
+    await send_spi_transaction(dut, 1, 0x00, 0x01)
     await send_spi_transaction(dut, 1, 0x02, 1)
 
     pwm_sig = dut.uo_out[0]
