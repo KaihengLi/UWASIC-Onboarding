@@ -239,6 +239,7 @@ async def test_pwm_duty(dut):
     high_ns = tf - t1
     period_ns = t2 - t1
     duty = 100 * high_ns / period_ns
+    
     assert 49 <= duty <= 51, f"50%: measured {duty:.1f}%, outside of 50 +- 1%"
 
     # 0%
