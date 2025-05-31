@@ -156,6 +156,14 @@ async def test_spi(dut):
 
     dut._log.info("SPI test completed successfully")
 
+async def wait_for_level(dut, desired_level, max_cycles=5000):
+    for _ in range(max_cycles):
+        await ClockCycles(dut.clk, 1)
+        bit0 = int(dut.uo_out.value) & 1
+        if bit0 == desired_level:
+            return get_sim_time("ns")
+    stuck = (int(dut.uo_out.value) & 1)
+    raise TestFailure(f"Timeout: PWM never reached {desired_level}; stuck at {stuck} after {max_cycles} cycles")
 
 @cocotb.test()
 async def test_pwm_freq(dut):
@@ -179,20 +187,9 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 7000)
 
     pwm_sig = dut.uo_out[0]
-    
-    #timeout error
-    period_expected = 1e9/3000
-    timeout = int(period_expected*2)
-
-    try:
-        await with_timeout(RisingEdge(pwm_sig), timeout, "ns")
-    except SimTimeoutError:
-        level = int(pwm_sig.value)
-        raise TestFailure(f"No rising edge within {timeout} ns; line stuck at {level}")
 
     t1 = get_sim_time("ns")
-    await RisingEdge(pwm_sig)
-    t2 = get_sim_time("ns")
+    t2 = await wait_for_level(dut,0)
 
     period_ns = t2 - t1
     freq_hz   = 1e9 / period_ns
@@ -227,17 +224,11 @@ async def test_pwm_duty(dut):
    #timeout error
     period_expected = 1e9/3000
     timeout = int(period_expected*2)
-    try:
-        await with_timeout(RisingEdge(pwm_sig), timeout, "ns")
-    except SimTimeoutError:
-        level = int(pwm_sig.value)
-        raise TestFailure(f"No rising edge within {timeout} ns; line stuck at {level}")
     
     t_r = get_sim_time("ns")
     await FallingEdge(pwm_sig)
-    t_f = get_sim_time("ns")
-    await RisingEdge(pwm_sig)
-    t_n = get_sim_time("ns")
+    t_f = await wait_for_level(dut,0)
+    t_n = await wait_for_level(dut,1)
     high_ns = t_f - t_r
     period_ns = t_n - t_r
     duty = 100 * high_ns / period_ns
