@@ -151,7 +151,16 @@ async def test_spi(dut):
 
     dut._log.info("SPI test completed successfully")
 
-async def wait_for_level(dut, desired_level, max_cycles=5000):
+async def wait_for_level(dut, prev_level, desired_level, max_cycles=5000):
+    for _ in range(max_cycles):
+        await ClockCycles(dut.clk, 1)
+        if (int(dut.uo_out.value) & 1) == prev_level:
+            break
+    else:
+        stuck = int(dut.uo_out.value) & 1
+        raise TestFailure(
+            f"Timeout: PWM never reached prev_level={prev_level}; stuck at {stuck} after {max_cycles} cycles"
+        )
     for _ in range(max_cycles):
         await ClockCycles(dut.clk, 1)
         bit0 = int(dut.uo_out.value) & 1
@@ -183,9 +192,9 @@ async def test_pwm_freq(dut):
 
     #pwm_sig = dut.uo_out[0]
 
-    t1 = await wait_for_level(dut,1,max_cycles=5000)
-    tf = await wait_for_level(dut,0,max_cycles=5000)
-    t2 = await wait_for_level(dut,1,max_cycles=5000)
+    t1 = await wait_for_level(dut,0,1,max_cycles=5000)
+    tf = await wait_for_level(dut,1,0,max_cycles=5000)
+    t2 = await wait_for_level(dut,0,1,max_cycles=5000)
 
     period_ns = t2 - t1
     freq_hz   = 1e9 / period_ns
@@ -223,9 +232,9 @@ async def test_pwm_duty(dut):
     period_expected = 1e9/3000
     timeout = int(period_expected*2)
     
-    t1 = await wait_for_level(dut,1,max_cycles=5000)
-    tf = await wait_for_level(dut,0,max_cycles=5000)
-    t2 = await wait_for_level(dut,1,max_cycles=5000)
+    t1 = await wait_for_level(dut,0,1,max_cycles=5000)
+    tf = await wait_for_level(dut,1,0,max_cycles=5000)
+    t2 = await wait_for_level(dut,0,1,max_cycles=5000)
 
     high_ns = tf - t1
     period_ns = t2 - t1
