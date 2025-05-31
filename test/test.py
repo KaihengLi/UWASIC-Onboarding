@@ -7,9 +7,11 @@ from cocotb.triggers import RisingEdge
 from cocotb.triggers  import FallingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.triggers import Timer
+from cocotb.triggers import with_timeout
 from cocotb.types import Logic
 from cocotb.types import LogicArray
 from cocotb.utils import get_sim_time
+from cocotb.result import SimTimeoutError, TestFailure
 
 
 async def await_half_sclk(dut):
@@ -108,14 +110,16 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 7000)
 
     pwm_sig = dut.uo_out[0]
+    
+    #timeout error
+    period_expected = 1e9/3000
+    timeout = int(period_expected*2)
 
-    detected = False
-    for i in range(5000):
-        await ClockCycles(dut.clk, 1)
-        if int(pwm_sig.value) == 1:
-            detected = True
-            break
-    assert detected, f"No rising edge after 5000 clk cycles; stuck at {int(pwm_sig.value)}"
+    try:
+        await with_timeout(RisingEdge(pwm_sig), timeout, "ns")
+    except SimTimeoutError:
+        level = int(pwm_sig.value)
+        raise TestFailure(f"No rising edge within {timeout} ns; line stuck at {level}")
 
     t1 = get_sim_time("ns")
     await RisingEdge(pwm_sig)
@@ -139,6 +143,7 @@ async def test_pwm_duty(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
     dut.ena.value = 1
+    
     dut.ui_in.value = ui_in_logicarray(1, 0, 0)
     await send_spi_transaction(dut, 1, 0x02, 1)
 
@@ -149,14 +154,16 @@ async def test_pwm_duty(dut):
     
     #wait
     await ClockCycles(dut.clk, 7000)
-
-    detected = False
-    for i in range(5000):
-        await ClockCycles(dut.clk, 1)
-        if int(pwm_sig.value) == 1:
-            detected = True
-            break
-    assert detected, f"50%: no rising edge; stuck at {int(pwm_sig.value)}"
+   
+   #timeout error
+    period_expected = 1e9/3000
+    timeout = int(period_expected*2)
+    try:
+        await with_timeout(RisingEdge(pwm_sig), timeout, "ns")
+    except SimTimeoutError:
+        level = int(pwm_sig.value)
+        raise TestFailure(f"No rising edge within {timeout} ns; line stuck at {level}")
+    
     t_r = get_sim_time("ns")
     await FallingEdge(pwm_sig)
     t_f = get_sim_time("ns")
@@ -169,16 +176,16 @@ async def test_pwm_duty(dut):
 
     # 0%
     await send_spi_transaction(dut, 1, 0x04, 0)
-    await ClockCycles(dut.clk, 2000)
+    await ClockCycles(dut.clk, 7000)
     for _ in range(10):
         await ClockCycles(dut.clk, 100)
-    assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
+        assert int(pwm_sig.value) == 0, f"0%: saw {int(pwm_sig.value)}, expected always 0"
 
     # 100%
     await send_spi_transaction(dut, 1, 0x04, 255)
-    await ClockCycles(dut.clk, 2000)
+    await ClockCycles(dut.clk, 7000)
     for _ in range(10):
         await ClockCycles(dut.clk, 100)
-    assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
+        assert int(pwm_sig.value) == 1, f"100%: saw {int(pwm_sig.value)}, expected always 1"
 
     dut._log.info("PWM duty-cycle tests passed")
